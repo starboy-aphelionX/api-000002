@@ -2,16 +2,16 @@ const express = require("express");
 const axios = require("axios");
 
 const app = express();
-app.use(express.json());
 
-app.post("/generate", async (req, res) => {
+app.get("/generate", async (req, res) => {
   try {
-    const { prompt } = req.body;
+    // GET method e body use hoy na, tai query theke nite hobe
+    const prompt = req.query.prompt;
 
     if (!prompt) {
       return res.status(400).json({
         status: false,
-        message: "Please provide prompt"
+        message: "Please provide prompt as query parameter"
       });
     }
 
