@@ -2,57 +2,49 @@ const express = require("express");
 const axios = require("axios");
 
 const app = express();
+const PORT = 3000;
 
-app.get("/generate", async (req, res) => {
+app.get("/api/ig", async (req, res) => {
+  const username = req.query.username;
+
+  if (!username) {
+    return res.status(400).json({
+      status: false,
+      message: "Username is required"
+    });
+  }
+
   try {
-    // GET method e body use hoy na, tai query theke nite hobe
-    const prompt = req.query.prompt;
+    const url = `https://www.instagram.com/${username}/?__a=1&__d=dis`;
 
-    if (!prompt) {
-      return res.status(400).json({
-        status: false,
-        message: "Please provide prompt as query parameter"
-      });
-    }
-
-    const response = await axios.post(
-      "https://notegpt.io/api/v2/images/start",
-      {
-        image_urls: [],
-        type: 60,
-        user_prompt: prompt,
-        aspect_ratio: "match_input_image",
-        num: 1,
-        model: "",
-        sub_type: 3,
-        upscale: 2,
-        resolution: "2k",
-        sign: "PUT_REAL_SIGN_HERE",
-        t: Math.floor(Date.now() / 1000)
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Origin": "https://notegpt.io",
-          "Referer": "https://notegpt.io/ai-image-generator",
-          "User-Agent": "Mozilla/5.0"
-        }
+    const response = await axios.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
       }
-    );
+    });
+
+    const user = response.data.graphql.user;
 
     res.json({
       status: true,
-      data: response.data
+      name: user.full_name,
+      username: user.username,
+      bio: user.biography,
+      followers: user.edge_followed_by.count,
+      following: user.edge_follow.count,
+      posts: user.edge_owner_to_timeline_media.count,
+      profile_pic: user.profile_pic_url_hd,
+      link: `https://instagram.com/${user.username}`
     });
 
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({
       status: false,
-      error: error.response?.data || error.message
+      message: "User not found or Instagram blocked request"
     });
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
